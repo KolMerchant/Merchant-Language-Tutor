@@ -1,0 +1,10 @@
+{
+  "name": "merchant-language-tutor",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Family language tutor: talk-and-listen practice for kids and adults.",
+  "scripts": {
+    "dev": "node dev-server.mjs"
+  }
+}
