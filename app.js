@@ -31,6 +31,25 @@ const KINDS = [
 ];
 const COLORS = ['#5b4bd6', '#d63384', '#f2a516', '#2e9e5b', '#1e88e5', '#e2574c', '#00897b', '#8e24aa'];
 const AVATARS = ['🧔', '👩', '👧', '🧒', '👶', '🧑', '👦', '👨', '👵', '👴', '🦁', '🐼', '🦄', '🐬', '🚀', '⚽', '🌻', '🦖'];
+// People pictures accept a skin tone. '' = the default yellow.
+const PEOPLE = new Set(['🧔', '👩', '👧', '🧒', '👶', '🧑', '👦', '👨', '👵', '👴']);
+const TONES = [
+  { v: '', label: 'Yellow' },
+  { v: '\u{1F3FB}', label: 'Light' },
+  { v: '\u{1F3FC}', label: 'Medium-light' },
+  { v: '\u{1F3FD}', label: 'Medium' },
+  { v: '\u{1F3FE}', label: 'Medium-dark' },
+  { v: '\u{1F3FF}', label: 'Dark' },
+];
+const TONE_RE = /[\u{1F3FB}-\u{1F3FF}]/u;
+// Older saves may hold a toned emoji in p.emoji: split it into picture + tone.
+function normalizeAvatar(p) {
+  const m = String(p.emoji || '').match(TONE_RE);
+  if (m) { p.tone = m[0]; p.emoji = p.emoji.replace(TONE_RE, ''); }
+  p.tone ||= '';
+  return p;
+}
+function avatarOf(p) { return PEOPLE.has(p.emoji) ? p.emoji + (p.tone || '') : p.emoji; }
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -89,7 +108,7 @@ async function api(path, { method = 'GET', json, raw = false } = {}) {
 
 /* ---------------------------------------------------------------- state */
 function makeProfile(id, name, kind, age, emoji, color) {
-  return { id, name, kind, age, emoji, color, lang: 'es', levels: { es: 'beginner' }, progress: {}, updatedAt: 1 };
+  return { id, name, kind, age, emoji, tone: '', color, lang: 'es', levels: { es: 'beginner' }, progress: {}, updatedAt: 1 };
 }
 function defaultState() {
   return {
@@ -565,7 +584,7 @@ function screenHome() {
       <div class="profiles">${state.profiles.map((p) => {
         const lang = langByCode(p.lang);
         return `<button class="profile-tile" data-id="${p.id}" style="--c:${p.color};--cl:${tint(p.color)}">
-          <div class="avatar">${p.emoji}</div><div class="name">${esc(p.name)}</div>
+          <div class="avatar">${avatarOf(p)}</div><div class="name">${esc(p.name)}</div>
           <div class="meta">${lang.flag} ${lang.name} · ⭐ ${prog(p).stars}</div></button>`;
       }).join('')}</div>
       ${server.ai ? '' : '<p class="note" style="margin-top:24px">⚠️ The AI voice and tutor aren’t connected yet, so the device voice is used and conversation practice is off. See the setup guide.</p>'}
@@ -594,7 +613,7 @@ async function changeLanguage(p, then) {
 function screenKidHome(p) {
   const big = p.kind === 'toddler';
   const canTalk = p.kind === 'kid' && (p.age || 0) >= 6 && server.ai;
-  render(`${topbar({ title: `${p.emoji} ${esc(p.name)}`, right: `${langPill(p, false)}${starsPill(p)}` })}
+  render(`${topbar({ title: `${avatarOf(p)} ${esc(p.name)}`, right: `${langPill(p, false)}${starsPill(p)}` })}
     <main class="page">
       <h2>${big ? 'Tap a picture!' : 'Pick a game!'}</h2>
       <div class="tiles">${CATEGORIES.map((c) => `<button class="tile" data-cat="${c.id}"><span class="big">${c.icon}</span>${esc(c.en)}</button>`).join('')}</div>
@@ -611,7 +630,7 @@ function screenKidHome(p) {
 
 function screenAdultHome(p) {
   const lvl = LEVELS.find((l) => l.id === levelOf(p));
-  render(`${topbar({ title: `${p.emoji} ${esc(p.name)}`, right: `${langPill(p, true)}${starsPill(p)}` })}
+  render(`${topbar({ title: `${avatarOf(p)} ${esc(p.name)}`, right: `${langPill(p, true)}${starsPill(p)}` })}
     <main class="page">
       <div class="section-label">Talk with Profe · <button class="chip" data-act="level">${lvl.en} ✏️</button></div>
       ${server.ai ? `<div class="tiles">${TOPICS.map((t) => `<button class="tile" data-topic="${t.id}"><span class="big">${t.icon}</span>${esc(t.en)}</button>`).join('')}</div>`
@@ -929,7 +948,7 @@ function screenSettings() {
         ${state.profiles.map((p) => {
           const lang = langByCode(p.lang);
           const kind = KINDS.find((k) => k.id === p.kind);
-          return `<div class="row"><div class="avatar" style="width:52px;height:52px;font-size:1.8rem;--cl:${tint(p.color)}">${p.emoji}</div>
+          return `<div class="row"><div class="avatar" style="width:52px;height:52px;font-size:1.8rem;--cl:${tint(p.color)}">${avatarOf(p)}</div>
             <div class="grow"><b>${esc(p.name)}</b><div class="note">${kind.en}${p.age ? `, ${p.age}` : ''} · ${lang.flag} ${lang.name} · ${LEVELS.find((l) => l.id === levelOf(p)).en} · ⭐ ${prog(p).stars}</div></div>
             <button class="btn secondary" data-edit="${p.id}">Edit</button></div>`;
         }).join('')}
@@ -955,7 +974,7 @@ function screenSettings() {
 }
 
 function screenEditProfile(existing) {
-  const p = existing ? clone(existing) : makeProfile(`p${Date.now().toString(36)}`, '', 'kid', 5, '🧒', pick(COLORS));
+  const p = normalizeAvatar(existing ? clone(existing) : makeProfile(`p${Date.now().toString(36)}`, '', 'kid', 5, '🧒', pick(COLORS)));
   const draw = () => {
     render(`${topbar({ title: existing ? `Edit ${esc(existing.name)}` : 'Add a person' })}
       <main class="page"><div class="panel">
@@ -965,7 +984,8 @@ function screenEditProfile(existing) {
         ${p.kind !== 'adult' ? `<div class="field"><label for="age">Age</label><input id="age" type="number" min="0" max="17" value="${p.age ?? ''}" style="max-width:120px"></div>` : ''}
         <div class="field"><label for="lang">Language</label><select id="lang">${LANGUAGES.map((l) => `<option value="${l.code}" ${l.code === p.lang ? 'selected' : ''}>${l.flag} ${l.name} · ${l.native}</option>`).join('')}</select></div>
         <div class="field"><label>Level in this language</label><div class="seg" id="lvl">${LEVELS.map((l) => `<button data-v="${l.id}" class="${levelOf(p) === l.id ? 'on' : ''}">${l.en}</button>`).join('')}</div></div>
-        <div class="field"><label>Picture</label><div class="emoji-pick">${AVATARS.map((a) => `<button data-v="${a}" class="${p.emoji === a ? 'on' : ''}">${a}</button>`).join('')}</div></div>
+        <div class="field"><label>Picture</label><div class="emoji-pick" id="pics">${AVATARS.map((a) => `<button data-v="${a}" class="${p.emoji === a ? 'on' : ''}">${PEOPLE.has(a) ? a + p.tone : a}</button>`).join('')}</div></div>
+        <div class="field"><label>Skin tone</label><div class="emoji-pick" id="tones">${TONES.map((t) => `<button data-v="${t.v}" class="${p.tone === t.v ? 'on' : ''}" aria-label="${t.label}" title="${t.label}">✋${t.v}</button>`).join('')}</div></div>
         <div class="field"><label>Color</label><div class="color-pick">${COLORS.map((c) => `<button data-v="${c}" class="${p.color === c ? 'on' : ''}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div></div>
         <div class="btn-row"><button class="btn" data-act="save">Save</button><button class="btn secondary" data-act="cancel">Cancel</button></div>
       </div>
@@ -976,7 +996,12 @@ function screenEditProfile(existing) {
     const keepName = () => { p.name = document.getElementById('nm').value; const a = document.getElementById('age'); if (a) p.age = a.value === '' ? null : Number(a.value); };
     on('#kind button', (el) => { keepName(); p.kind = el.dataset.v; if (p.kind === 'adult') p.age = null; draw(); });
     on('#lvl button', (el) => { p.levels[p.lang] = el.dataset.v; app.querySelectorAll('#lvl button').forEach((b) => b.classList.toggle('on', b === el)); });
-    on('.emoji-pick button', (el) => { p.emoji = el.dataset.v; app.querySelectorAll('.emoji-pick button').forEach((b) => b.classList.toggle('on', b === el)); });
+    on('#pics button', (el) => { p.emoji = el.dataset.v; app.querySelectorAll('#pics button').forEach((b) => b.classList.toggle('on', b === el)); });
+    on('#tones button', (el) => {
+      p.tone = el.dataset.v;
+      app.querySelectorAll('#tones button').forEach((b) => b.classList.toggle('on', b === el));
+      app.querySelectorAll('#pics button').forEach((b) => { const a = b.dataset.v; b.textContent = PEOPLE.has(a) ? a + p.tone : a; });
+    });
     on('.color-pick button', (el) => { p.color = el.dataset.v; app.querySelectorAll('.color-pick button').forEach((b) => b.classList.toggle('on', b === el)); });
     document.getElementById('lang').addEventListener('change', (e) => { keepName(); p.lang = e.target.value; p.levels[p.lang] ||= 'beginner'; draw(); });
     on('[data-act=back]', screenSettings);
@@ -1024,6 +1049,7 @@ async function boot() {
   if (server.sync) { try { remote = (await api('/api/state')).state; } catch { remote = null; } }
   state = mergeStates(remote, local || (remote ? null : defaultState()));
   state.deleted ||= [];
+  state.profiles.forEach(normalizeAvatar);
   ls.set(LS.state, JSON.stringify(state));
   if (server.sync && JSON.stringify(remote) !== JSON.stringify(state)) syncNow();
 
