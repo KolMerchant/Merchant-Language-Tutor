@@ -1,7 +1,7 @@
 # Merchant Language Tutor: setup guide
 
 A family language tutor that runs in the browser: talk to it and it talks back.
-Spanish is the starting language, and 13 more (French, German, Dutch, Cantonese and others) are one tap away.
+Spanish (from Spain) is the starting language, and 13 more (French, German, Dutch, Cantonese, Yoruba and others) are one tap away, each with a native-speaker voice.
 
 **Who gets what**
 
@@ -65,6 +65,29 @@ Open your site (`https://<project>.vercel.app`), enter the family code and creat
 
 Any update you make reaches every device the next time it's opened. There's nothing to reinstall.
 
+## Native-speaker accents (recommended)
+On its own, the app uses OpenAI's voice for every language, which imitates the accents. To give each language a real native-speaker voice from its country of origin, add these two free services:
+
+| Language | Voice | Service |
+|---|---|---|
+| Spanish (Spain), French (France), German, Dutch (Netherlands), Cantonese (Hong Kong), Mandarin, Italian, Portuguese (Portugal), Japanese, Korean, Arabic, Hindi, Swahili (Tanzania) | Native neural voice for each | Microsoft Azure |
+| Yoruba | Native Yoruba voice | 9jaLingo |
+| English parts of the kids' prompts | US English | Microsoft Azure |
+
+**Azure (about 10 minutes, free tier: 500,000 characters a month)**
+1. Go to <https://portal.azure.com> and create a free account. It asks for a card for identity checks, but the Free tier doesn't charge.
+2. Click **Create a resource**, search for **Speech**, choose **Speech** (by Microsoft), and click **Create**.
+3. Fill in: **Resource group** → *Create new* → `tutor`; **Region** → **East US**; **Name** → anything, e.g. `merchant-tutor-voice`; **Pricing tier** → **Free F0**. Click **Review + create**, then **Create**.
+4. When it's done, click **Go to resource**, then **Keys and Endpoint**. Copy **KEY 1** and the **Location/Region** (e.g. `eastus`).
+5. In Vercel, add `AZURE_SPEECH_KEY` (KEY 1) and `AZURE_SPEECH_REGION` (e.g. `eastus`), then redeploy.
+
+**9jaLingo (for Yoruba)**
+1. Sign up at **9jalingo.org** and create an API key (it starts with `nl-`).
+2. In Vercel, add `NAIJALINGO_API_KEY`, then redeploy.
+
+If either service is unavailable, the app falls back to the OpenAI voice, so nothing goes silent.
+To change a language's voice, set `AZURE_VOICE_<CODE>` (e.g. `AZURE_VOICE_ES` = `es-ES-AlvaroNeural` for a male voice) or edit `voice` in `languages.js`. For Yoruba, set `NAIJALINGO_VOICE_YO`.
+
 ## Adding or changing languages
 Kids or adults: ⚙️ Settings → Edit person → **Language**. Adults can also tap the language pill at the top of their screen.
 To add a language that isn't in the list, add one line to `languages.js` (copy an existing line). The picture-card words for a new language are translated automatically the first time and then saved.
@@ -72,6 +95,7 @@ To add a language that isn't in the list, add one line to `languages.js` (copy a
 ## Privacy
 - First names only.
 - Voice recordings go to OpenAI to be turned into text and are never stored by this app.
+- The words the app speaks are sent as text to the voice service (OpenAI, Azure or 9jaLingo) to be read aloud.
 - Profiles and stars are saved in your own Redis database, or only on the device if you skipped step 4.
 
 ## Optional settings (environment variables)
@@ -81,6 +105,10 @@ To add a language that isn't in the list, add one line to `languages.js` (copy a
 | `OPENAI_TRANSCRIBE_MODEL` | `gpt-transcribe` (falls back to `whisper-1`) | Speech to text |
 | `OPENAI_TTS_MODEL` | `gpt-4o-mini-tts` | The speaking voice |
 | `TTS_VOICE_KIDS` / `TTS_VOICE_ADULT` | `coral` / `sage` | Voice choice |
+| `AZURE_SPEECH_KEY` / `AZURE_SPEECH_REGION` | (none) | Native voices for all languages except Yoruba |
+| `AZURE_VOICE_<CODE>` | see `languages.js` | Pick a different Azure voice for one language |
+| `NAIJALINGO_API_KEY` | (none) | Native Yoruba voice via 9jaLingo |
+| `NAIJALINGO_VOICE_YO` | `adeola_yo` | Which 9jaLingo Yoruba speaker |
 
 ## Testing on your own computer
 ```

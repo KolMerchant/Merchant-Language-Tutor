@@ -10,7 +10,7 @@ const modalRoot = document.getElementById('modal-root');
 const LS = {
   state: 'mlt-state-v1',
   code: 'mlt-family-code',
-  vocab: (code) => `mlt-vocab-${code}-v1`,
+  vocab: (code) => `mlt-vocab-${code}-v3`,
 };
 const ls = {
   get(k) { try { return localStorage.getItem(k); } catch { return null; } },
@@ -87,7 +87,7 @@ function explain(err) {
 }
 
 /* ------------------------------------------------------------------ api */
-const server = { reachable: false, ai: false, sync: false };
+const server = { reachable: false, ai: false, sync: false, nativeVoices: [] };
 
 async function api(path, { method = 'GET', json, raw = false } = {}) {
   const headers = {};
@@ -234,16 +234,16 @@ async function ttsBlob(text, style, slow, lang) {
   const persist = style !== 'adult' || text.length < 60;
   const cacheUrl = `/__tts-cache/${encodeURIComponent(key)}`;
   let cache = null;
-  if (persist) { try { cache = 'caches' in window ? await caches.open('mlt-tts-v1') : null; } catch { cache = null; } }
+  if (persist) { try { cache = 'caches' in window ? await caches.open('mlt-tts-v3') : null; } catch { cache = null; } }
   if (cache) {
     const hit = await cache.match(cacheUrl).catch(() => null);
     if (hit) { const b = await hit.blob(); memTts.set(key, b); return b; }
   }
-  const r = await api('/api/speak', { method: 'POST', json: { text, accent: lang.accent, style, slow }, raw: true });
+  const r = await api('/api/speak', { method: 'POST', json: { text, lang: lang.code, accent: lang.accent, style, slow }, raw: true });
   const b = await r.blob();
   if (memTts.size > 200) memTts.clear();
   memTts.set(key, b);
-  if (cache) cache.put(cacheUrl, new Response(b, { headers: { 'Content-Type': 'audio/mpeg' } })).catch(() => {});
+  if (cache) cache.put(cacheUrl, new Response(b, { headers: { 'Content-Type': b.type || 'audio/mpeg' } })).catch(() => {});
   return b;
 }
 
@@ -277,17 +277,33 @@ function browserSpeak(text, lang, slow, token) {
   });
 }
 
-async function speak(text, { style = 'kid', slow = false, lang } = {}) {
-  if (!text) return;
+// English parts of a mixed prompt. Spoken separately only when the target language has a native voice.
+const ENGLISH = { code: 'en', accent: 'clear American English', bcp: 'en-US' };
+const E = (t) => ({ t, en: true });
+
+// input: a string, or a list of parts: strings (target language) and E('english text').
+async function speak(input, { style = 'kid', slow = false, lang } = {}) {
+  const parts = (Array.isArray(input) ? input : [input])
+    .map((x) => (typeof x === 'string' ? { t: x, en: false } : x))
+    .filter((x) => x && x.t);
+  if (!parts.length) return;
   stopSpeaking();
   const token = ++speakToken;
-  if (server.ai) {
-    try {
-      const blob = await ttsBlob(text, style, slow, lang);
-      return await playBlob(blob, token);
-    } catch (e) { console.warn('tts failed, using device voice', e); }
+  const native = server.ai && server.nativeVoices.includes(lang.code);
+  const plan = native ? parts : [{ t: parts.map((x) => x.t).join(' '), en: false }];
+  for (const part of plan) {
+    if (token !== speakToken) return;
+    const voiceLang = part.en ? ENGLISH : lang;
+    let played = false;
+    if (server.ai) {
+      try {
+        const blob = await ttsBlob(part.t, style, slow, voiceLang);
+        await playBlob(blob, token);
+        played = true;
+      } catch (e) { console.warn('tts failed, using device voice', e); }
+    }
+    if (!played) await browserSpeak(part.t, voiceLang, slow || style !== 'adult', token);
   }
-  return browserSpeak(text, lang, slow || style !== 'adult', token);
 }
 
 /* ------------------------------------------------------------ speech in */
@@ -716,9 +732,9 @@ async function screenLearn(p, cat, mode) {
   const pill = el('.stars-pill');
 
   const promptFor = (card, w) => {
-    if (mode === 'quiz') return isAdult ? '' : `What is this in ${lang.name}?`;
+    if (mode === 'quiz') return isAdult ? '' : [E(`What is this in ${lang.name}?`)];
     if (isAdult) return w.word;
-    return `${cap(enWord(card))}! In ${lang.name}, we say: ${w.word}. Can you say ${w.word}?`;
+    return [E(`${cap(enWord(card))}! In ${lang.name}, we say:`), `${w.word}.`, E('Can you say it?')];
   };
   const reveal = (card, w) => {
     el('.word').textContent = w.word;
@@ -773,7 +789,7 @@ async function screenLearn(p, cat, mode) {
       el('.feedback').className = 'feedback try';
       el('.feedback').textContent = 'Almost! Listen and try again 👂';
       reveal(card, w);
-      await speak(isAdult ? w.word : `${w.word}. Say ${w.word}!`, { style, lang, slow: true });
+      await speak(isAdult ? w.word : [`${w.word}.`, E('Your turn!')], { style, lang, slow: true });
       return;
     }
     // Second miss: kids still get a star for trying; everyone moves on.
@@ -784,7 +800,7 @@ async function screenLearn(p, cat, mode) {
       const pr = prog(p); pr.stars++; earned++; save(); pill.textContent = `⭐ ${pr.stars}`;
       el('.feedback').className = 'feedback good';
       el('.feedback').textContent = 'Good try! ⭐ Let’s do the next one.';
-      await speak('Good try!', { style, lang });
+      await speak([E('Good try!')], { style, lang });
     } else {
       el('.feedback').className = 'feedback try';
       el('.feedback').textContent = `It’s “${w.word}”. Moving on.`;
@@ -834,7 +850,7 @@ async function screenLearn(p, cat, mode) {
         ${canQuiz && mode === 'learn' ? '<button class="btn" data-act="quiz">❓ Quiz me</button>' : ''}
         <button class="btn secondary" data-act="home">🏠 Games</button></div>`;
     burst();
-    speak(isAdult ? pick(lang.praise) : `${pick(lang.praise)} You did it!`, { style, lang });
+    speak(isAdult ? pick(lang.praise) : [pick(lang.praise), E('You did it!')], { style, lang });
     on('[data-act=again]', () => screenLearn(p, cat, mode));
     on('[data-act=quiz]', () => screenLearn(p, cat, 'quiz'));
     on('[data-act=home]', back);
@@ -1037,7 +1053,7 @@ async function boot() {
   render('<div class="center-screen"><div class="spinner"></div></div>');
   try {
     const h = await api('/api/health');
-    Object.assign(server, { reachable: true, ai: !!h.ai, sync: !!h.sync });
+    Object.assign(server, { reachable: true, ai: !!h.ai, sync: !!h.sync, nativeVoices: Array.isArray(h.nativeVoices) ? h.nativeVoices : [] });
   } catch (e) {
     if (e.status === 401) return screenFamilyCode(ls.get(LS.code) ? 'That code didn’t work.' : '');
     Object.assign(server, { reachable: false, ai: false, sync: false });

@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   const { language = {}, items = [] } = body(req);
   const code = String(language.code || '').replace(/[^a-z-]/gi, '').slice(0, 12);
   if (!code || !Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'bad_request' });
-  const key = `mlt:vocab:${code}:v1`;
+  const key = `mlt:vocab:${code}:v3`;
 
   try {
     if (hasStore()) {
@@ -24,6 +24,7 @@ export default async function handler(req, res) {
           role: 'system',
           content: `You translate single words for a picture-card game for young children learning ${language.name} (${language.accent}).
 For each item give the single most common, child-friendly word a native speaker would say to a small child. No articles unless the language always requires one. Numbers as words.
+Always write words in the standard orthography with every diacritic and tone mark (e.g. Yoruba ẹ, ọ, ṣ with high/low tone accents such as ajá, ẹja, ọ̀bọ; Vietnamese tones; German umlauts); never drop them.
 If ${language.name} is not written in the Latin alphabet, "roman" is the standard romanization (Jyutping with tone numbers for Cantonese, Pinyin with tone marks for Mandarin, Hepburn for Japanese, Revised Romanization for Korean, etc.); otherwise "roman" is "".
 Reply only with JSON: {"words": {"<id>": {"word": "...", "roman": "..."}}}`,
         },

@@ -4,20 +4,21 @@
 //   bcp:    browser voice tag, used only when the AI voice is unavailable
 //   accent: what the AI voice and tutor are told to use
 //   script: 'latin' or 'other' (other = show romanization, compare by characters)
+//   voice:  native-speaker Azure neural voice for this language (used when AZURE_SPEECH_KEY is set)
 export const LANGUAGES = [
-  { code: 'es', name: 'Spanish', native: 'Español', flag: '🇲🇽', stt: 'es', bcp: 'es-MX', accent: 'Latin American (Mexican) Spanish', script: 'latin', praise: ['¡Muy bien!', '¡Excelente!', '¡Bravo!', '¡Súper!'] },
-  { code: 'fr', name: 'French', native: 'Français', flag: '🇫🇷', stt: 'fr', bcp: 'fr-FR', accent: 'standard French from France', script: 'latin', praise: ['Très bien !', 'Bravo !', 'Super !'] },
-  { code: 'de', name: 'German', native: 'Deutsch', flag: '🇩🇪', stt: 'de', bcp: 'de-DE', accent: 'standard German (Hochdeutsch)', script: 'latin', praise: ['Sehr gut!', 'Super!', 'Toll!'] },
-  { code: 'nl', name: 'Dutch', native: 'Nederlands', flag: '🇳🇱', stt: 'nl', bcp: 'nl-NL', accent: 'standard Netherlands Dutch', script: 'latin', praise: ['Heel goed!', 'Super!', 'Goed zo!'] },
-  { code: 'yue', name: 'Cantonese', native: '廣東話', flag: '🇭🇰', stt: null, bcp: 'zh-HK', accent: 'Hong Kong Cantonese, written in Traditional Chinese characters', script: 'other', praise: ['好叻呀！', '好好！', '勁呀！'] },
-  { code: 'zh', name: 'Mandarin', native: '中文', flag: '🇨🇳', stt: 'zh', bcp: 'zh-CN', accent: 'standard Mandarin Chinese, written in Simplified characters', script: 'other', praise: ['很好！', '太棒了！'] },
-  { code: 'it', name: 'Italian', native: 'Italiano', flag: '🇮🇹', stt: 'it', bcp: 'it-IT', accent: 'standard Italian', script: 'latin', praise: ['Bravissimo!', 'Molto bene!'] },
-  { code: 'pt', name: 'Portuguese', native: 'Português', flag: '🇧🇷', stt: 'pt', bcp: 'pt-BR', accent: 'Brazilian Portuguese', script: 'latin', praise: ['Muito bem!', 'Parabéns!'] },
-  { code: 'ja', name: 'Japanese', native: '日本語', flag: '🇯🇵', stt: 'ja', bcp: 'ja-JP', accent: 'standard Tokyo Japanese', script: 'other', praise: ['すごい！', 'よくできました！'] },
-  { code: 'ko', name: 'Korean', native: '한국어', flag: '🇰🇷', stt: 'ko', bcp: 'ko-KR', accent: 'standard Seoul Korean', script: 'other', praise: ['잘했어요!', '최고!'] },
-  { code: 'ar', name: 'Arabic', native: 'العربية', flag: '🇸🇦', stt: 'ar', bcp: 'ar-SA', accent: 'Modern Standard Arabic', script: 'other', praise: ['ممتاز!', 'أحسنت!'] },
-  { code: 'hi', name: 'Hindi', native: 'हिन्दी', flag: '🇮🇳', stt: 'hi', bcp: 'hi-IN', accent: 'standard Hindi', script: 'other', praise: ['बहुत अच्छे!', 'शाबाश!'] },
-  { code: 'sw', name: 'Swahili', native: 'Kiswahili', flag: '🇰🇪', stt: 'sw', bcp: 'sw-KE', accent: 'standard East African Swahili', script: 'latin', praise: ['Vizuri sana!', 'Hongera!'] },
+  { code: 'es', name: 'Spanish', native: 'Español', flag: '🇪🇸', stt: 'es', bcp: 'es-ES', voice: 'es-ES-ElviraNeural', accent: 'Castilian Spanish from Spain', script: 'latin', praise: ['¡Muy bien!', '¡Excelente!', '¡Bravo!', '¡Súper!'] },
+  { code: 'fr', name: 'French', native: 'Français', flag: '🇫🇷', stt: 'fr', bcp: 'fr-FR', voice: 'fr-FR-DeniseNeural', accent: 'standard French from France', script: 'latin', praise: ['Très bien !', 'Bravo !', 'Super !'] },
+  { code: 'de', name: 'German', native: 'Deutsch', flag: '🇩🇪', stt: 'de', bcp: 'de-DE', voice: 'de-DE-KatjaNeural', accent: 'standard German (Hochdeutsch)', script: 'latin', praise: ['Sehr gut!', 'Super!', 'Toll!'] },
+  { code: 'nl', name: 'Dutch', native: 'Nederlands', flag: '🇳🇱', stt: 'nl', bcp: 'nl-NL', voice: 'nl-NL-FennaNeural', accent: 'standard Netherlands Dutch', script: 'latin', praise: ['Heel goed!', 'Super!', 'Goed zo!'] },
+  { code: 'yue', name: 'Cantonese', native: '廣東話', flag: '🇭🇰', stt: null, bcp: 'zh-HK', voice: 'zh-HK-HiuMaanNeural', accent: 'Hong Kong Cantonese, written in Traditional Chinese characters', script: 'other', praise: ['好叻呀！', '好好！', '勁呀！'] },
+  { code: 'zh', name: 'Mandarin', native: '中文', flag: '🇨🇳', stt: 'zh', bcp: 'zh-CN', voice: 'zh-CN-XiaoxiaoNeural', accent: 'standard Mandarin Chinese, written in Simplified characters', script: 'other', praise: ['很好！', '太棒了！'] },
+  { code: 'it', name: 'Italian', native: 'Italiano', flag: '🇮🇹', stt: 'it', bcp: 'it-IT', voice: 'it-IT-ElsaNeural', accent: 'standard Italian', script: 'latin', praise: ['Bravissimo!', 'Molto bene!'] },
+  { code: 'pt', name: 'Portuguese', native: 'Português', flag: '🇵🇹', stt: 'pt', bcp: 'pt-PT', voice: 'pt-PT-RaquelNeural', accent: 'European Portuguese from Portugal', script: 'latin', praise: ['Muito bem!', 'Parabéns!'] },
+  { code: 'ja', name: 'Japanese', native: '日本語', flag: '🇯🇵', stt: 'ja', bcp: 'ja-JP', voice: 'ja-JP-NanamiNeural', accent: 'standard Tokyo Japanese', script: 'other', praise: ['すごい！', 'よくできました！'] },
+  { code: 'ko', name: 'Korean', native: '한국어', flag: '🇰🇷', stt: 'ko', bcp: 'ko-KR', voice: 'ko-KR-SunHiNeural', accent: 'standard Seoul Korean', script: 'other', praise: ['잘했어요!', '최고!'] },
+  { code: 'ar', name: 'Arabic', native: 'العربية', flag: '🇸🇦', stt: 'ar', bcp: 'ar-SA', voice: 'ar-SA-ZariyahNeural', accent: 'Modern Standard Arabic', script: 'other', praise: ['ممتاز!', 'أحسنت!'] },
+  { code: 'hi', name: 'Hindi', native: 'हिन्दी', flag: '🇮🇳', stt: 'hi', bcp: 'hi-IN', voice: 'hi-IN-SwaraNeural', accent: 'standard Hindi', script: 'other', praise: ['बहुत अच्छे!', 'शाबाश!'] },
+  { code: 'sw', name: 'Swahili', native: 'Kiswahili', flag: '🇹🇿', stt: 'sw', bcp: 'sw-TZ', voice: 'sw-TZ-RehemaNeural', accent: 'standard Swahili from Tanzania', script: 'latin', praise: ['Vizuri sana!', 'Hongera!'] },
   { code: 'yo', name: 'Yoruba', native: 'Yorùbá', flag: '🇳🇬', stt: 'yo', bcp: 'yo-NG', accent: 'standard Yoruba (Nigeria)', script: 'latin', praise: ['Ó dára!', 'Ó dára púpọ̀!'] },
 ];
 
@@ -85,16 +86,16 @@ export const CATEGORIES = [
   },
 ];
 
-// Built-in Spanish (Latin American) so Spanish works instantly and reliably.
+// Built-in Spanish (Spain) so Spanish works instantly and reliably.
 // Other languages are translated by the AI the first time, then saved.
 export const BUILTIN_WORDS = {
   es: {
-    red: 'rojo', blue: 'azul', green: 'verde', yellow: 'amarillo', orange_c: 'naranja', purple: 'morado', pink: 'rosa', brown: 'café', black: 'negro', white: 'blanco',
+    red: 'rojo', blue: 'azul', green: 'verde', yellow: 'amarillo', orange_c: 'naranja', purple: 'morado', pink: 'rosa', brown: 'marrón', black: 'negro', white: 'blanco',
     dog: 'perro', cat: 'gato', cow: 'vaca', pig: 'cerdo', horse: 'caballo', duck: 'pato', fish: 'pez', bird: 'pájaro', lion: 'león', elephant: 'elefante', monkey: 'mono', bear: 'oso', frog: 'rana', rabbit: 'conejo',
     n1: 'uno', n2: 'dos', n3: 'tres', n4: 'cuatro', n5: 'cinco', n6: 'seis', n7: 'siete', n8: 'ocho', n9: 'nueve', n10: 'diez',
     apple: 'manzana', banana: 'plátano', orange_f: 'naranja', strawberry: 'fresa', milk: 'leche', water: 'agua', bread: 'pan', egg: 'huevo', cheese: 'queso', cookie: 'galleta',
     hand: 'mano', foot: 'pie', eye: 'ojo', nose: 'nariz', mouth: 'boca', ear: 'oreja', tooth: 'diente',
-    ball: 'pelota', car: 'carro', house: 'casa', sun: 'sol', moon: 'luna', star: 'estrella', tree: 'árbol', book: 'libro', shoe: 'zapato',
+    ball: 'pelota', car: 'coche', house: 'casa', sun: 'sol', moon: 'luna', star: 'estrella', tree: 'árbol', book: 'libro', shoe: 'zapato',
     hello: 'hola', goodbye: 'adiós', thanks: 'gracias', please: 'por favor', yes: 'sí', no: 'no', goodmorning: 'buenos días', goodnight: 'buenas noches', mom: 'mamá', dad: 'papá', baby: 'bebé',
   },
 };
@@ -103,7 +104,7 @@ export const TOPICS = [
   { id: 'free', icon: '💬', en: 'Free chat' },
   { id: 'intro', icon: '🙋', en: 'Introduce yourself' },
   { id: 'family', icon: '👨‍👩‍👧‍👦', en: 'Family' },
-  { id: 'food', icon: '🌮', en: 'Ordering food' },
+  { id: 'food', icon: '🍽️', en: 'Ordering food' },
   { id: 'shopping', icon: '🛒', en: 'Shopping' },
   { id: 'travel', icon: '🗺️', en: 'Directions & travel' },
   { id: 'work', icon: '💼', en: 'Work' },

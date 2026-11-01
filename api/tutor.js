@@ -33,6 +33,7 @@ Rules:
 - If the learner writes or speaks English, or says they are stuck, help them: show how to say it in ${lang}, then continue.
 - If the learner's last message has a mistake in ${lang}, fill "correction" gently. Otherwise "correction" is null. Do not correct punctuation, capitalisation or missing accents that come from speech-to-text.
 - The learner's messages come from speech recognition and may be imperfect; guess the intended meaning generously.
+- Always write the target language with its full standard diacritics and tone marks (e.g. Yoruba ẹ, ọ, ṣ and tone accents).
 - For languages not written in the Latin alphabet, put a romanization (e.g. Jyutping for Cantonese, Pinyin for Mandarin) in "romanized"; otherwise "romanized" is "".
 
 Reply ONLY with a JSON object:
